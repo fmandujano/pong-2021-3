@@ -3,19 +3,61 @@
 //--------------------------------------------------------------
 void ofApp::setup()
 {
+    //condiciones iniciales de los objetos de juego
     posPaletaP1 = new ofVec2f(10, 50 );
-    posPaletaP2 = new ofVec2f(10, 50 );
+    posPaletaP2 = new ofVec2f(ofGetWidth()-15-10, 50 );
     rPelota = 15;
     posPelota = new ofVec2f (ofGetWidth()/2, ofGetHeight()/2);
     velPelota = new ofVec2f(100,100 );
+
+    //estado inicial de la aplicacion
+    AppState = EAppState::menu;
+
+    //configurar el menu
+    mainPanel.setup();
+    mainPanel.add( btnServer.setup("Crear partida")  );
+    mainPanel.add( btnClient.setup("Conectar a partida") );
+    mainPanel.setPosition( ofGetWidth()/2 - mainPanel.getWidth()/2 ,
+                           ofGetHeight()/2 - mainPanel.getHeight()/2);
+
+    btnServer.addListener( this, &ofApp::setupServer );
+    btnClient.addListener( this, &ofApp::setupClient );
+}
+
+void ofApp::setupServer()
+{
+    AppState = EAppState::server;
+    puts("Creando servidor");
+
+    udpManager.Create();
+    udpManager.Bind(PORT);
+    udpManager.SetNonBlocking(true);
+}
+
+void ofApp::setupClient()
+{
+    AppState = EAppState::client;
+    puts("Creando cliente");
+
+    udpManager.Create();
+    udpManager.Connect("127.0.0.1", PORT);
 }
 
 //--------------------------------------------------------------
 void ofApp::update()
 {
+    if( AppState == EAppState::server)
+        updateServer();
+    else if( AppState == EAppState::client)
+        updateClient();
+}
+
+
+void ofApp::updateServer()
+{
     //calculo de movimieento de jugador local
-    if(w) posPaletaP1->y -= 50 * ofGetLastFrameTime() ;
-    if(s) posPaletaP1->y += 50 * ofGetLastFrameTime() ;
+    if(w) posPaletaP1->y -= 150 * ofGetLastFrameTime() ;
+    if(s) posPaletaP1->y += 150 * ofGetLastFrameTime() ;
 
     //calculo de movimiento de la pelota
     posPelota->x += velPelota->x * ofGetLastFrameTime();
@@ -42,16 +84,43 @@ void ofApp::update()
         velPelota->y *= -1;
         posPelota->y = ofGetHeight() -1;
     }
+
+    //recibir mov del jugador remoto
+    memset(buffer, 0, BUFFER_SIZE);
+    if( udpManager.Receive(buffer, BUFFER_SIZE ) > 0 )
+    {
+        puts( buffer );
+    }
+}
+
+void ofApp::updateClient()
+{
+    //calculo de movimieento de jugador local
+    if(w) posPaletaP2->y -= 150 * ofGetLastFrameTime() ;
+    if(s) posPaletaP2->y += 150 * ofGetLastFrameTime() ;
+
+    //enviar la posicion de la paleta P2
+    memset( buffer, 0, BUFFER_SIZE);
+    sprintf( buffer, "pos: %f,%f \n",posPaletaP2->x, posPaletaP2->y);
+    udpManager.Send( buffer, BUFFER_SIZE );
 }
 
 //--------------------------------------------------------------
 void ofApp::draw()
 {
-    ofBackground(ofColor::black);
-    ofSetColor(255,255,0);
-    ofCircle( posPelota->x,posPelota->y, 0, rPelota);
-    //dinbujar paletas de jugadores
-    ofRect(posPaletaP1->x, posPaletaP1->y, 15,50);
+    if( AppState == EAppState::menu )
+    {
+        mainPanel.draw();
+    }
+    else
+    {
+        ofBackground(ofColor::black);
+        ofSetColor(255,255,0);
+        ofCircle( posPelota->x,posPelota->y, 0, rPelota);
+        //dinbujar paletas de jugadores
+        ofRect(posPaletaP1->x, posPaletaP1->y, 15,100);
+        ofRect( posPaletaP2->x, posPaletaP2->y, 15,100 );
+    }
 }
 
 //--------------------------------------------------------------
