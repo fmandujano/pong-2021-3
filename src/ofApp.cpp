@@ -40,7 +40,11 @@ void ofApp::setupClient()
     puts("Creando cliente");
 
     udpManager.Create();
-    udpManager.Connect("127.0.0.1", PORT);
+
+    //mostrar UI para pedir la IP
+    string strIP = ofSystemTextBoxDialog("IP del servidor", "127.0.0.1" );
+
+    udpManager.Connect( strIP.c_str()  , PORT);
 }
 
 //--------------------------------------------------------------
@@ -84,6 +88,8 @@ void ofApp::updateServer()
         velPelota->y *= -1;
         posPelota->y = ofGetHeight() -1;
     }
+
+
 
     /* recibir mov del jugador remoto */
     memset(buffer, 0, BUFFER_SIZE);
