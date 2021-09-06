@@ -85,11 +85,20 @@ void ofApp::updateServer()
         posPelota->y = ofGetHeight() -1;
     }
 
-    //recibir mov del jugador remoto
+    /* recibir mov del jugador remoto */
     memset(buffer, 0, BUFFER_SIZE);
     if( udpManager.Receive(buffer, BUFFER_SIZE ) > 0 )
     {
-        puts( buffer );
+        //imprimir valor recibido
+        //puts( buffer );
+        //deserializar valores separados por comas
+        char * tempBuffer;
+        tempBuffer = strtok( buffer, ",");
+        //el primer valor es la pos en X
+        posPaletaP2->x = atof(tempBuffer);
+        //el segundo valor se obtiene llamando otra vez a strtok
+        tempBuffer = strtok( NULL, ",");
+        posPaletaP2->y = atof(tempBuffer);
     }
 }
 
@@ -99,9 +108,12 @@ void ofApp::updateClient()
     if(w) posPaletaP2->y -= 150 * ofGetLastFrameTime() ;
     if(s) posPaletaP2->y += 150 * ofGetLastFrameTime() ;
 
-    //enviar la posicion de la paleta P2
+    /* enviar la posicion de la paleta P2 */
+    //limpiar el buffer, poner a 0 sus bytes
     memset( buffer, 0, BUFFER_SIZE);
-    sprintf( buffer, "pos: %f,%f \n",posPaletaP2->x, posPaletaP2->y);
+    //serializacion con valores separados por coma (CSV)
+    sprintf( buffer, "%f,%f\n",posPaletaP2->x, posPaletaP2->y);
+    //enviar por el socket
     udpManager.Send( buffer, BUFFER_SIZE );
 }
 
@@ -116,6 +128,12 @@ void ofApp::draw()
     {
         ofBackground(ofColor::black);
         ofSetColor(255,255,0);
+        //titulo
+        ofDrawBitmapString( AppState == EAppState::server ?
+                                "SERVER" : "CLIENT",
+                            15,15);
+
+
         ofCircle( posPelota->x,posPelota->y, 0, rPelota);
         //dinbujar paletas de jugadores
         ofRect(posPaletaP1->x, posPaletaP1->y, 15,100);
