@@ -3,8 +3,6 @@
 #include "ofMain.h"
 #include "ofxGui.h"
 #include "ofxNetwork.h"
-
-#define PORT 6666
 #define BUFFER_SIZE 100
 
 class ofApp : public ofBaseApp{
@@ -43,6 +41,7 @@ class ofApp : public ofBaseApp{
         } AppState;
 
         //variables para red
+        int gamePort = 6666;
         ofxUDPManager udpManager;
         char buffer[BUFFER_SIZE];
         //estado de las teclas de movimiento
@@ -53,4 +52,7 @@ class ofApp : public ofBaseApp{
         ofVec2f * posPelota;
         ofVec2f * velPelota;
         float rPelota;
+
+        //direccion local
+        std::string serverIP;
 };

@@ -30,8 +30,12 @@ void ofApp::setupServer()
     puts("Creando servidor");
 
     udpManager.Create();
-    udpManager.Bind(PORT);
+    udpManager.Bind( gamePort );
     udpManager.SetNonBlocking(true);
+
+    int port;
+    udpManager.GetListenAddr(serverIP, port);
+    printf("ip local : %s ", serverIP.c_str());
 }
 
 void ofApp::setupClient()
@@ -44,7 +48,7 @@ void ofApp::setupClient()
     //mostrar UI para pedir la IP
     string strIP = ofSystemTextBoxDialog("IP del servidor", "127.0.0.1" );
 
-    udpManager.Connect( strIP.c_str()  , PORT);
+    udpManager.Connect( strIP.c_str()  , gamePort);
 }
 
 //--------------------------------------------------------------
